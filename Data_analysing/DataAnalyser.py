@@ -31,7 +31,17 @@ class DataAnalyser:
         weekday_map = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
         return {day: df[df['time'].dt.weekday == day_num].reset_index(drop=True)
                 for day_num, day in weekday_map.items()}
-
+        
+    def split_by_weekday(self, df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
+        weekday_map = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
+        daily_dfs = {day: df[df['time'].dt.weekday == day_num].reset_index(drop=True)
+                    for day_num, day in weekday_map.items()}
+        work_week_df = df[df['time'].dt.weekday < 5].reset_index(drop=True)
+        weekend_df = df[df['time'].dt.weekday >= 5].reset_index(drop=True)
+        daily_dfs['WW'] = work_week_df
+        daily_dfs['WE'] = weekend_df
+        return daily_dfs      
+        
     def process_data(self, visitor_path: str, exogen_data_directory_path: str) -> Dict[str, Dict[str, pd.DataFrame]]:
         df_dict = self.load_data(visitor_path=visitor_path, exogen_data_directory_path=exogen_data_directory_path)
         return {location: self.split_by_weekday(df=self.convert_object_to_numeric(df=self.strip_column_spaces(df=df)))
@@ -48,16 +58,17 @@ class DataAnalyser:
 
     def get_exog_categories(self, exog_variable: str) -> List[tuple]:
         exog_categories = {
-            'Air Temperature (°C)': [(-float('inf'), 0, '< 0°C'), (0, 10, '0-10°C'), (10, 20, '10-20°C'), (20, 30, '20-30°C'), (30, float('inf'), '> 30°C')],
-            'Sunshine Duration (min)': [(0, 0, 'No Sunshine'), (1, 2, '1-2 min'), (2, 5, '2-5 min'), (5, 10, '5-10 min')],
-            'Air Pressure (hPa)': [(-float('inf'), 980, '< 980 hPa'), (980, 1000, '980-1000 hPa'), (1000, 1020, '1000-1020 hPa'), (1020, 1040, '1020-1040 hPa'), (1040, float('inf'), '> 1040 hPa')],
-            'Precipitation Duration (min)': [(0, 0, 'No Precipitation'), (0.1, 2, '1-2 min'), (2.1, 5, '2-5 min'), (5.1, 10, '5-10 min')],
-            'Absolute Humidity (g/m³)': [(0, 5, '0-5 g/m³'), (5, 10, '5-10 g/m³'), (10, 15, '10-15 g/m³'), (15, float('inf'), '> 15 g/m³')],
-            'Precipitation (mm)': [(0, 0, 'No Rain'), (0.1, 2, '0.1-2 mm'), (2, 5, '2-5 mm'), (5, 10, '5-10 mm')],
-            'Snow Depth (cm)': [(0, 0, 'No Snow'), (1, 2, '1-2 cm'), (2, 5, '2-5 cm'), (5, 10, '5-10 cm')],
-            'Wind Speed (km/h)': [(0, 10, '0-10 km/h'), (10, 20, '10-20 km/h'), (20, 30, '20-30 km/h'), (30, float('inf'), '> 30 km/h')]
+            'Air Temperature (°C)': [(-float('inf'), 0, 'Cold (< 0°C)'), (0, 25, 'Moderate (0-25°C)'), (25, float('inf'), 'Warm (> 25°C)')],
+            'Sunshine Duration (min)': [(0, 0, 'No Sunshine'), (0.1, float('inf'), 'Sunshine')],
+            'Air Pressure (hPa)': [(-float('inf'), 875, 'Low (< 850 hPa)'),(875, 925, 'Normal (850-925 hPa)'),(925, float('inf'), 'High (> 925 hPa)')],
+            'Precipitation Duration (min)': [(0, 0, 'No Precipitation'), (0.1, float('inf'), 'Precipitation')],
+            'Absolute Humidity (g/m³)': [(-float('inf'), 3, 'Low (< 3 g/m³)'), (3, 10, 'Moderate (3-10 g/m³)'), (10, float('inf'), 'High (> 10 g/m³)')],
+            'Precipitation (mm)': [(0, 0, 'No Rain'), (0.1, float('inf'), 'It is Raining')],
+            'Snow Depth (cm)': [(0, 0, 'No Snow'), (0.1, float('inf'), 'Snow Present')],
+            'Wind Speed (km/h)': [(0, 15, 'Calm to Moderate (0-15 km/h)'), (15, float('inf'), 'Windy (> 15 km/h)')]
         }
         return exog_categories.get(exog_variable, [])
+
 
     def calculate_deltas(self, overall_avg: pd.DataFrame, df: pd.DataFrame, exog_variable: str, categories: List[tuple]) -> pd.DataFrame:
         delta_frames = []
@@ -74,7 +85,7 @@ class DataAnalyser:
         return pd.concat(delta_frames)
 
     def process_and_plot_all_exog_variables(self, location_weekdays_dfs: Dict[str, Dict[str, pd.DataFrame]], directory: str = './plots') -> None:
-        weekday_number_map = {'MO': '01', 'TU': '02', 'WE': '03', 'TH': '04', 'FR': '05', 'SA': '06', 'SU': '07'}
+        weekday_number_map = {'MO': '01', 'TU': '02', 'WE': '03', 'TH': '04', 'FR': '05', 'SA': '06', 'SU': '07', 'WW': '09' , 'WE': '10'}
         for location, weekdays_dfs in location_weekdays_dfs.items():
             for day, df in weekdays_dfs.items():
                 day_number = weekday_number_map.get(day[:2], '')
