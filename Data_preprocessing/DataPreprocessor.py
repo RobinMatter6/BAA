@@ -127,12 +127,13 @@ class DataPreprocessor:
     def convert_all_to_numeric(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         for col in dataframe.columns:
             if not pd.api.types.is_datetime64_any_dtype(dataframe[col]):
-                dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
+                try:
+                    dataframe[col] = pd.to_numeric(dataframe[col], downcast='integer', errors='raise')
+                except (ValueError, TypeError):
+                    dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
         return dataframe
     
-    
     def standardize_dataframe(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        print(dataframe.dtypes)
         numeric_columns = dataframe.select_dtypes(include=['float64', 'int64']).columns
         standardized_dataframe = dataframe.copy()
         standardized_dataframe[numeric_columns] = (dataframe[numeric_columns] - dataframe[numeric_columns].mean()) / dataframe[numeric_columns].std()
