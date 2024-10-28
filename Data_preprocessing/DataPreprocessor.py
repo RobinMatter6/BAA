@@ -123,26 +123,57 @@ class DataPreprocessor:
                     csv_file_paths.append(full_path)
         return csv_file_paths
 
+    def standardize_dataframe(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        print(dataframe.dtypes)
+        numeric_columns = dataframe.select_dtypes(include=['float64', 'int64']).columns
+        standardized_dataframe = dataframe.copy()
+        standardized_dataframe[numeric_columns] = (dataframe[numeric_columns] - dataframe[numeric_columns].mean()) / dataframe[numeric_columns].std()
+        return standardized_dataframe
+    
+    def convert_all_to_numeric(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        for col in dataframe.columns:
+            if not pd.api.types.is_datetime64_any_dtype(dataframe[col]):
+                dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
+        return dataframe
+    
     def get_merged_visitor_meteo_data(self, visitor_dataframe: pd.DataFrame, 
-                                            meteo_csv_file_paths: List[str] = None, 
-                                            meteo_csv_directory: str = None) -> Dict[str, pd.DataFrame]:
-        if (meteo_csv_file_paths is None and meteo_csv_directory is None) or \
-        (meteo_csv_file_paths is not None and meteo_csv_directory is not None):
-            raise ValueError("You must provide either meteo_csv_file_paths or meteo_csv_directory, but not both.")
+                                   meteo_csv_file_paths: List[str] = None, 
+                                   meteo_csv_directory: str = None,
+                                   standardize: bool = False) -> Dict[str, pd.DataFrame]:
+        if (meteo_csv_file_paths is None) == (meteo_csv_directory is None):
+            raise ValueError("Provide either meteo_csv_file_paths or meteo_csv_directory, but not both.")
         visitor_dataframes = self.prepare_visitor_dataframe(visitor_dataframe)
-        print(visitor_dataframes)
-        if meteo_csv_directory:
-            meteo_csv_file_paths = self.list_csv_files_in_directory(meteo_csv_directory)
+        meteo_csv_file_paths = meteo_csv_file_paths or self.list_csv_files_in_directory(meteo_csv_directory)
         meteo_dataframe = self.prepare_meteo_dataframes(meteo_csv_file_paths, ";")
-        merged_dataframes = {}
-        for key, visitor_dataframe in visitor_dataframes.items():
-            merged_dataframes[key] = self.merge_visitor_with_meteo(visitor_dataframe, meteo_dataframe)
-        return merged_dataframes
+        merged_data = {
+            key: self.convert_all_to_numeric(self.merge_visitor_with_meteo(visitor_df, meteo_dataframe))
+            for key, visitor_df in visitor_dataframes.items()
+        }
+        return {key: self.standardize_dataframe(df) for key, df in merged_data.items()} if standardize else merged_data
 
 
 if __name__ == "__main__":
     preprocessing = DataPreprocessor()
     visitor_data = pd.read_csv("BesucherMessungExport.csv")
     meteo_csv_directory = "./exogen_data"
-    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory)
+    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory, standardize=False)
+    print(merged_visitor_meteo_dataframes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    preprocessing = DataPreprocessor()
+    visitor_data = pd.read_csv("BesucherMessungExport.csv")
+    meteo_csv_directory = "./exogen_data"
+    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory,standardize=True)
     print(merged_visitor_meteo_dataframes)
