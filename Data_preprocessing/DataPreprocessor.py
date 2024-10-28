@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import List, Dict
 import os
+import numpy as np
 
 class DataPreprocessor:
     def __init__(self):
@@ -123,6 +124,13 @@ class DataPreprocessor:
                     csv_file_paths.append(full_path)
         return csv_file_paths
 
+    def convert_all_to_numeric(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        for col in dataframe.columns:
+            if not pd.api.types.is_datetime64_any_dtype(dataframe[col]):
+                dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
+        return dataframe
+    
+    
     def standardize_dataframe(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         print(dataframe.dtypes)
         numeric_columns = dataframe.select_dtypes(include=['float64', 'int64']).columns
@@ -130,16 +138,48 @@ class DataPreprocessor:
         standardized_dataframe[numeric_columns] = (dataframe[numeric_columns] - dataframe[numeric_columns].mean()) / dataframe[numeric_columns].std()
         return standardized_dataframe
     
-    def convert_all_to_numeric(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        for col in dataframe.columns:
-            if not pd.api.types.is_datetime64_any_dtype(dataframe[col]):
-                dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
+    def remove_outliers_z_scores(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        numeric_columns = dataframe.select_dtypes(include=['float64', 'int64']).columns
+        for col in numeric_columns:
+            mean = dataframe[col].mean()
+            std = dataframe[col].std()
+            z_scores = (dataframe[col] - mean) / std
+            dataframe = dataframe[(z_scores >= -3) & (z_scores <= 3)]
         return dataframe
-    
+
+    #IQR is to aggressive
+    def remove_outliers(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        numeric_columns = dataframe.select_dtypes(include=['float64', 'int64']).columns
+        for col in numeric_columns:
+            Q1 = dataframe[col].quantile(0.25)
+            Q3 = dataframe[col].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            dataframe = dataframe[(dataframe[col] >= lower_bound) & (dataframe[col] <= upper_bound)]
+        return dataframe
+
+    def log_transform_skewed_columns(self, dataframe: pd.DataFrame, skew_threshold: float = 0.5) -> pd.DataFrame:
+        for col in dataframe.select_dtypes(include=['float64', 'int64']).columns:
+            skewness = dataframe[col].skew()
+            if skewness > skew_threshold:
+                if (dataframe[col] <= 0).any():
+                    dataframe[col] = np.log1p(dataframe[col] - dataframe[col].min() + 1)
+                else:
+                    dataframe[col] = np.log(dataframe[col])
+        return dataframe
+
+    def prepare_data_for_ml(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        dataframe = self.remove_outliers_z_scores(dataframe)
+        dataframe = self.log_transform_skewed_columns(dataframe)
+        dataframe = self.remove_outliers_z_scores(dataframe)
+        dataframe = self.standardize_dataframe(dataframe)
+        return dataframe
+
     def get_merged_visitor_meteo_data(self, visitor_dataframe: pd.DataFrame, 
                                    meteo_csv_file_paths: List[str] = None, 
                                    meteo_csv_directory: str = None,
-                                   standardize: bool = False) -> Dict[str, pd.DataFrame]:
+                                   prepare_for_ml: bool = False) -> Dict[str, pd.DataFrame]:
         if (meteo_csv_file_paths is None) == (meteo_csv_directory is None):
             raise ValueError("Provide either meteo_csv_file_paths or meteo_csv_directory, but not both.")
         visitor_dataframes = self.prepare_visitor_dataframe(visitor_dataframe)
@@ -149,31 +189,37 @@ class DataPreprocessor:
             key: self.convert_all_to_numeric(self.merge_visitor_with_meteo(visitor_df, meteo_dataframe))
             for key, visitor_df in visitor_dataframes.items()
         }
-        return {key: self.standardize_dataframe(df) for key, df in merged_data.items()} if standardize else merged_data
+        return {key: self.prepare_data_for_ml(df) for key, df in merged_data.items()} if prepare_for_ml else merged_data
 
 
 if __name__ == "__main__":
     preprocessing = DataPreprocessor()
     visitor_data = pd.read_csv("BesucherMessungExport.csv")
     meteo_csv_directory = "./exogen_data"
-    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory, standardize=False)
+    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory, prepare_for_ml=True)
     print(merged_visitor_meteo_dataframes)
 
-
-
-
-
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    preprocessing = DataPreprocessor()
-    visitor_data = pd.read_csv("BesucherMessungExport.csv")
-    meteo_csv_directory = "./exogen_data"
-    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory,standardize=True)
-    print(merged_visitor_meteo_dataframes)
+    for key, df in merged_visitor_meteo_dataframes.items():
+            print(f"Testing DataFrame for {key}...")
+            
+            # Check for skewness
+            skewness = df.select_dtypes(include=['float64', 'int64']).skew()
+            print(f"Skewness for {key}:\n{skewness}\n")
+            
+            # Check for outliers
+            numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
+            outlier_counts = {}
+            
+            for col in numeric_columns:
+                mean = df[col].mean()
+                std = df[col].std()
+                z_scores = (df[col] - mean) / std
+                outlier_counts[col] = ((z_scores < -3) | (z_scores > 3)).sum()
+            
+            print(f"Outlier counts for {key}:\n{outlier_counts}\n")
+            
+            # Check for standardization
+            means = df[numeric_columns].mean()
+            stds = df[numeric_columns].std()
+            is_standardized = all(np.isclose(means, 0, atol=1e-1)) and all(np.isclose(stds, 1, atol=1e-1))
+            print(f"Is {key} standardized? {is_standardized}\n")
