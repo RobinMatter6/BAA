@@ -16,9 +16,9 @@ Die TFT-Implementierung mit PyTorch Forecasting wurde gezeigt, und es wurde besc
 [https://github.com/google-research/google-research/tree/master/tft](https://github.com/google-research/google-research/tree/master/tft).  
 Das Ziel ist es, zu prüfen, ob das Modell die Distanzinformationen bezüglich der Wichtigkeit von Ereignissen in den exogenen Variablen liefert. Falls dies nicht der Fall ist, sollten Alternativen in Betracht gezogen werden.
 
-### Ausreisser und Schiefe
-Robin äusserte Probleme beim Entfernen von Ausreissern und Schwierigkeiten beim Entfernen von Skewness in den Daten.  
-Als Tipp wurde gegeben, einen stärkeren Logarithmus auf die Spalten anzuwenden, die noch zu stark von Skewness betroffen sind. Für die korrekte Entfernung der Ausreisser wurde beschlossen, diese für alle Wochentage mit einem Halbstundenfenster nach dem IQR-Prinzip zu entfernen. Darüber hinaus sollte mit unterschiedlich starken IQR-Outlier-Erkennungsverfahren gearbeitet werden.
+### Outliers und Skewness
+Robin äusserte Probleme beim Entfernen von Outliers und Schwierigkeiten beim Entfernen von Skewness in den Daten.  
+Als Tipp wurde gegeben, einen stärkeren Logarithmus auf die Spalten anzuwenden, die noch zu stark von Skewness betroffen sind. Für die korrekte Entfernung der Outliers wurde beschlossen, diese für alle Wochentage mit einem Halbstundenfenster nach dem IQR-Prinzip zu entfernen. Darüber hinaus sollte mit unterschiedlich starken IQR-Outlier-Erkennungsverfahren gearbeitet werden.
 
 ### Literaturrecherche
 Es sollte eine Recherche nach weiteren Papers zum Forschungsgebiet der BAA durchgeführt werden.
@@ -28,6 +28,10 @@ Sommer-/Winterzeit sollte in der Datenvorverarbeitung berücksichtigt werden.
 
 ### Statistische Analyse
 Gauss-Verteilung und Histogramm-Kategorisierung sollen zur Verbesserung der Trainingsdaten verwendet werden.
+
+### Zwischenpräsentation
+Erster Draft der PowerPoint slides und geplanter Aufbau wurde gezeigt.
+Der Zwischenpräsentations Termin wurde festgelegt.
 
 > **Hinweis:** Die To-Dos sind als Issues in diesem Repository erfasst.
 
