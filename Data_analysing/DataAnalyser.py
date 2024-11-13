@@ -60,7 +60,11 @@ class DataAnalyser:
         exog_categories = {
             'Air Temperature (°C)': [(-float('inf'), 0, 'Cold (< 0°C)'), (0, 25, 'Moderate (0-25°C)'), (25, float('inf'), 'Warm (> 25°C)')],
             'Sunshine Duration (min)': [(0, 0, 'No Sunshine'), (0.1, float('inf'), 'Sunshine')],
-            'Air Pressure (hPa)': [(-float('inf'), 875, 'Low (< 850 hPa)'),(875, 925, 'Normal (850-925 hPa)'),(925, float('inf'), 'High (> 925 hPa)')],
+            'air_pressure_distribution': [
+                (-float('inf'), 925, 'Low (< 925 hPa)'),
+                (925, 975, 'Normal (925-975 hPa)'),
+                (975, float('inf'), 'High (> 975 hPa)')
+            ],
             'Precipitation Duration (min)': [(0, 0, 'No Precipitation'), (0.1, float('inf'), 'Precipitation')],
             'Absolute Humidity (g/m³)': [(-float('inf'), 3, 'Low (< 3 g/m³)'), (3, 10, 'Moderate (3-10 g/m³)'), (10, float('inf'), 'High (> 10 g/m³)')],
             'Precipitation (mm)': [(0, 0, 'No Rain'), (0.1, float('inf'), 'It is Raining')],
