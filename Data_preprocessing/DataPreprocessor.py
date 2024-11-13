@@ -11,14 +11,6 @@ class DataPreprocessor:
         date_formats = [
             '%Y%m%d%H%M',
             '%d.%m.%Y %H:%M',
-            '%Y-%m-%d',
-            '%y%m%d',
-            '%d-%m-%y',
-            '%m/%d/%y',
-            '%m-%d-%y',
-            '%d/%m/%y',
-            '%b %d, %y',
-            '%y.%m.%d'
         ]
         for col in dataframe.columns:
             for date_format in date_formats:
@@ -133,6 +125,7 @@ class DataPreprocessor:
                     dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
         return dataframe
     
+    
     def standardize_dataframe(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         numeric_columns = dataframe.select_dtypes(include=['float64', 'int64']).columns
         standardized_dataframe = dataframe.copy()
@@ -159,21 +152,57 @@ class DataPreprocessor:
             upper_bound = Q3 + 1.5 * IQR
             dataframe = dataframe[(dataframe[col] >= lower_bound) & (dataframe[col] <= upper_bound)]
         return dataframe
+    
 
-    def log_transform_skewed_columns(self, dataframe: pd.DataFrame, skew_threshold: float = 0.5) -> pd.DataFrame:
+    def remove_outliers_with_rolling_window(self, dataframe: pd.DataFrame, time_column: str, value_column: str,
+                                            multiplier: float = 1.5, mark_outliers: bool = False) -> pd.DataFrame:
+        dataframe[time_column] = pd.to_datetime(dataframe[time_column])
+        dataframe['weekday'] = dataframe[time_column].dt.weekday
+        dataframe['time_30min'] = dataframe[time_column].dt.floor('30min')
+        outlier_flags = pd.Series(False, index=dataframe.index)
+        for weekday in range(7):
+            weekday_data = dataframe[dataframe['weekday'] == weekday]
+            weekday_data_grouped = weekday_data.groupby('time_30min', as_index=True)[value_column]
+            for time_window, group in weekday_data_grouped:
+                Q1 = group.quantile(0.25)
+                Q3 = group.quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - multiplier * IQR
+                upper_bound = Q3 + multiplier * IQR
+
+                outliers = (group < lower_bound) | (group > upper_bound)
+                outlier_flags.loc[group.index] = outliers
+        if mark_outliers:
+            dataframe['outlier'] = outlier_flags
+            return dataframe
+        else:
+            return dataframe[~outlier_flags]
+
+
+
+    def log_transform_skewed_columns(self, dataframe: pd.DataFrame, skew_threshold: float = 0.5, log_base: int = 10) -> pd.DataFrame:
+        high_log_columns = ["Precipitation Duration (min)", "Precipitation (mm)", "Snow Depth (cm)"]
         for col in dataframe.select_dtypes(include=['float64', 'int64']).columns:
             skewness = dataframe[col].skew()
             if skewness > skew_threshold:
-                if (dataframe[col] <= 0).any():
-                    dataframe[col] = np.log1p(dataframe[col] - dataframe[col].min() + 1)
+                if col in high_log_columns:
+                    print("col: " + col)
+                    if (dataframe[col] <= 0).any():
+                        dataframe[col] = np.log1p(np.log10((dataframe[col] - dataframe[col].min() + 1)))
+                    else:
+                        dataframe[col] = np.log1p(np.log10((dataframe[col])))
                 else:
-                    dataframe[col] = np.log(dataframe[col])
+                    if (dataframe[col] <= 0).any():
+                        dataframe[col] = np.log1p(dataframe[col] - dataframe[col].min() + 1)
+                    else:
+                        dataframe[col] = np.log1p(dataframe[col])
         return dataframe
 
+
     def prepare_data_for_ml(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        dataframe = self.remove_outliers_z_scores(dataframe)
         dataframe = self.log_transform_skewed_columns(dataframe)
-        dataframe = self.remove_outliers_z_scores(dataframe)
+        #dataframe = self.remove_outliers_z_scores(dataframe)
+        dataframe = self.remove_outliers_with_rolling_window(dataframe, time_column="time", value_column="visitors")
         dataframe = self.standardize_dataframe(dataframe)
         return dataframe
 
@@ -199,28 +228,28 @@ if __name__ == "__main__":
     meteo_csv_directory = "./exogen_data"
     merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory, prepare_for_ml=True)
     print(merged_visitor_meteo_dataframes)
-
+    merged_visitor_meteo_dataframes["Rathausquai"].to_csv("dump.csv", index=False)
     for key, df in merged_visitor_meteo_dataframes.items():
-            print(f"Testing DataFrame for {key}...")
-            
-            # Check for skewness
-            skewness = df.select_dtypes(include=['float64', 'int64']).skew()
-            print(f"Skewness for {key}:\n{skewness}\n")
-            
-            # Check for outliers
-            numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
-            outlier_counts = {}
-            
-            for col in numeric_columns:
-                mean = df[col].mean()
-                std = df[col].std()
-                z_scores = (df[col] - mean) / std
-                outlier_counts[col] = ((z_scores < -3) | (z_scores > 3)).sum()
-            
-            print(f"Outlier counts for {key}:\n{outlier_counts}\n")
-            
-            # Check for standardization
-            means = df[numeric_columns].mean()
-            stds = df[numeric_columns].std()
-            is_standardized = all(np.isclose(means, 0, atol=1e-1)) and all(np.isclose(stds, 1, atol=1e-1))
-            print(f"Is {key} standardized? {is_standardized}\n")
+        print(f"Testing DataFrame for {key}...")
+        print(df.dtypes)
+        # Check for skewness
+        skewness = df.select_dtypes(include=['float64', 'int64']).skew()
+        print(f"Skewness for {key}:\n{skewness}\n")
+        
+        # Check for outliers
+        numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
+        outlier_counts = {}
+        
+        for col in numeric_columns:
+            mean = df[col].mean()
+            std = df[col].std()
+            z_scores = (df[col] - mean) / std
+            outlier_counts[col] = ((z_scores < -3) | (z_scores > 3)).sum()
+        
+        print(f"Outlier counts for {key}:\n{outlier_counts}\n")
+        
+        # Check for standardization
+        means = df[numeric_columns].mean()
+        stds = df[numeric_columns].std()
+        is_standardized = all(np.isclose(means, 0, atol=1e-1)) and all(np.isclose(stds, 1, atol=1e-1))
+        print(f"Is {key} standardized? {is_standardized}\n")
