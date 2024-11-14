@@ -5,7 +5,7 @@ Im Folgenden werden die Sprint-Abgleiche bezüglich der Bachelorarbeit zwischen 
 
 <details>
 <br>
-  <summary><strong>Protokoll vom Kickoff Meeting</strong></summary>
+  <summary><strong>Protokoll des Kickoff Meeting</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 15. September 2024  
@@ -42,7 +42,7 @@ Es sollte eine erste Projektplanung mit folgenden Elementen bis zum nächsten Ab
 
 <details>
 <br>
-  <summary><strong>Protokoll vom 1. Oktober 2024</strong></summary>
+  <summary><strong>Protokoll des 1. Oktober 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 1. Oktober 2024  
@@ -73,7 +73,7 @@ Etablierung des Datenzugangs, erste Schritte der Vorverarbeitung und Diskussion 
 
 <details>
 <br>
-  <summary><strong>Protokoll vom 15. Oktober 2024</strong></summary>
+  <summary><strong>Protokoll des 15. Oktober 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 15. Oktober 2024  
@@ -107,7 +107,7 @@ Abklärung des Fortschritts in der Datenaufbereitung und Analyse.
 
 <details>
 <br>
-  <summary><strong>Protokoll vom 29. Oktober 2024</strong></summary>
+  <summary><strong>Protokoll des 29. Oktober 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 29. Oktober 2024  
@@ -146,7 +146,7 @@ Klärung des aktuellen Standes und Definition der nächsten Schritte für die Da
 
 <details>
 <br>
-  <summary><strong>Protokoll vom 12. November 2024</strong></summary>
+  <summary><strong>Protokoll des 12. November 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 12. November 2024  
