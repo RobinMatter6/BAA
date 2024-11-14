@@ -138,7 +138,7 @@ Klärung des aktuellen Standes und Definition der nächsten Schritte für die Da
 - **Zeitumstellung:** Sommer-/Winterzeit sollte in der Datenvorverarbeitung berücksichtigt werden.
 
 #### Trainingsdaten verbesserung
-: **Statische Code Analyse:** Eine Gauss-Verteilung und Histogramm-Kategorisierung sollen zur Verbesserung der Trainingsdaten verwendet werden.
+- **Statische Code Analyse:** Eine Gauss-Verteilung und Histogramm-Kategorisierung sollen zur Verbesserung der Trainingsdaten verwendet werden.
 
 #### Zwischenpräsentation
 - **Slides:** Erster Aufbau der PowerPoint Slides und geplanter Aufbau wurde gezeigt.
