@@ -1,16 +1,16 @@
 # BAA Sprint Abgleichsprotokolle
 
 
-## Protokoll vom Kickoff Meeting
+Im Folgenden werden die Sprint-Abgleiche bezüglich der Bachelorarbeit zwischen Robin Matter und Ramón Christen festgehalten:
 
 <details>
-  <summary>Meeting-Informationen</summary>
+<br>
+  <summary><strong>Protokoll vom Kickoff Meeting</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 15. September 2024  
   **Themen:** Projektplanung, Aufgabenaufstellung, Literaturrecherche, Datenzugang und Dokumentation
 
-</details>
 
 ---
 
@@ -36,20 +36,18 @@ Es sollte eine erste Projektplanung mit folgenden Elementen bis zum nächsten Ab
 
 #### Wetterdatenzugang
 - **MeteoSchweiz Zugang**: Ramón Christen stellte einen Link für den Zugang zu Wetterdaten von MeteoSchweiz bereit.
+<br><br>
+</details>
 
-<br><br><br>
-
-
-## Protokoll vom 1. Oktober 2024
 
 <details>
-  <summary>Meeting-Informationen</summary>
+<br>
+  <summary><strong>Protokoll vom 1. Oktober 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 1. Oktober 2024  
   **Themen:** Datenzugang, Vorverarbeitung und Analyse
   
-</details>
 
 ---
 
@@ -68,20 +66,19 @@ Etablierung des Datenzugangs, erste Schritte der Vorverarbeitung und Diskussion 
 #### Datenaufbereitung und Analyse
 - **Meteo Datenzugang:** Es wurden als nächste Schritte definiert abzuwarten bis Meteo Datenzugriff erhalten wird und dann mit der Datenverabeitung zu beginnen.
 - **Libraries:** Es wurde empfohlen mit Python und den Libraries Pandas, Numpy und MatPlotLib zu arbeiten.
+<br><br>
+</details>
 
-<br><br><br>
 
-
-## Protokoll vom 15. Oktober 2024
 
 <details>
-  <summary>Meeting-Informationen</summary>
+<br>
+  <summary><strong>Protokoll vom 15. Oktober 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 15. Oktober 2024  
   **Themen:** Datenzugang, Daten Vorverarbeitung und Analyse
 
-</details>
 
 
 ---
@@ -105,20 +102,17 @@ Abklärung des Fortschritts in der Datenaufbereitung und Analyse.
 - **GPU-Hub:** Es wurde besprochen, dass der GPU-Hub der HSLU für das Training des Modells verwendet werden könnte.
 #### Zwischenpräsentation
 - **Termin:** Es wurde mögliche Termine für die Zwischenpräsentation zusammengetragen, um anschliessend Zeitvorschläge dem Experten zukommen zulassen.
-
-
-<br><br><br>
-
-## Protokoll vom 29. Oktober 2024
+<br><br>
+</details>
 
 <details>
-  <summary>Meeting-Informationen</summary>
+<br>
+  <summary><strong>Protokoll vom 29. Oktober 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 29. Oktober 2024  
   **Themen:** Datenanalyse und TFT-Modellentwicklung
 
-</details>
 
 ---
 ### 1. Ziel des Meetings
@@ -138,29 +132,26 @@ Klärung des aktuellen Standes und Definition der nächsten Schritte für die Da
 - **Zeitumstellung:** Sommer-/Winterzeit sollte in der Datenvorverarbeitung berücksichtigt werden.
 
 #### Trainingsdaten verbesserung
-- **Statische Code Analyse:** Eine Gauss-Verteilung und Histogramm-Kategorisierung sollen zur Verbesserung der Trainingsdaten verwendet werden.
+-**Statische Code Analyse:** Eine Gauss-Verteilung und Histogramm-Kategorisierung sollen zur Verbesserung der Trainingsdaten verwendet werden.
 
 #### Zwischenpräsentation
 - **Slides:** Erster Aufbau der PowerPoint Slides und geplanter Aufbau wurde gezeigt.
 - **Termin:** Der Zwischenpräsentations-Termin wurde festgelegt.
 <br><br>
 
-> **Hinweis:** Ab diesem Protokoll werden die To-Dos als Issues in diesem Repository erfasst..
+> **Hinweis:** Die To-Dos sind als Issues in diesem Repository erfasst.
 
-<br><br><br>
-
-
-## Protokoll vom 12. November 2024
+<br><br>
+</details>
 
 <details>
-  <summary>Meeting-Informationen vom 12. November 2024</summary>
+<br>
+  <summary><strong>Protokoll vom 12. November 2024</strong></summary>
   
   **Teilnehmer:** Robin Matter, Ramón Christen  
   **Datum:** 12. November 2024  
   **Themen:** TFT-Modellentwicklung, Datenanalyse, Zwischenpräsentation und Dokumentation
   
-</details>
-
 ---
 
 ### 1. Ziel des Meetings
@@ -185,3 +176,10 @@ Klärung des aktuellen Standes und Definition der nächsten Schritte für die Da
 #### Zwischenpräsentation
 - **Daniel Wechsler**: Es wurde beschlossen, Daniel Wechsler, der zuständig für die Bachelorarbeit bei der Partnerfirma "Arcade" ist, im CC für die Zwischenpräsentation einzuladen.
 - **Präsentations-Bilder**: Bilder, die nicht ausschliesslich dekorativen Charakter haben, sollen mit "source <Quelle>" deklariert werden. Als Quellenangabe reicht dabei der Name der Quelle. Es wurde das Beispiel "source Wikipedia" genannt.
+<br><br>
+
+> **Hinweis:** Die To-Dos sind als Issues in diesem Repository erfasst.
+
+
+<br><br>
+</details>
