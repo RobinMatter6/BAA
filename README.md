@@ -183,3 +183,54 @@ Klärung des aktuellen Standes und Definition der nächsten Schritte für die Da
 
 <br><br>
 </details>
+
+
+<details>
+<br>
+  <summary><strong>Protokoll des 26. November 2024</strong></summary>
+  
+  **Teilnehmer:** Robin Matter, Ramón Christen  
+  **Datum:** 26. November 2024  
+  **Themen:** TFT-Paraemeter optimierung, TFT-Attention Auslesen, Datenaufbereitung, Dokumentaion
+  
+---
+
+### 1. Ziel des Meetings
+Besprechung der Zwischenpräsentation wie auch der erzielten Resultate, bezüglich des TFT-Trainings und des Attention-Auslesens und -Darstellens.
+
+
+### 2. Besprochene Themen und Beschlüsse
+
+
+#### TFT-Parameter optimieren
+- **MAE-Test-Skript:** Es wurde entschieden, dass als nächster Schritt ein Testskript geschrieben werden sollte, das mittels MAE (Mean Absolute Error) die mit verschiedenen Parametern trainierten Modelle testet.
+- **Erste Parameter Wahl:** Bei der Parameterwahl wurde bereits entschieden, dass das Modell die Daten der letzten Woche und des kommenden Tages berücksichtigen sollte. Wenn nötig, kann von dort verkleinert werden.
+
+
+#### Hyperparameter tuning schlechter als nach Training:
+- **Problem:** Robin teilte mit, dass bei den ersten Versuchen das Hyperparametertuning mit höherem Loss startete, als das Trainingsskript am Ende hatte. So war der Loss nach dem Hyperparametertuning höher als nach dem Training.
+- **Vorschlag von Robin:** Robin schlug als nächsten Schritt vor, genauer zu untersuchen und sicherzustellen, dass das korrekte Modell für das Hyperparametertuning geladen wird.
+- **Vermerk von Ramón Christen:** Darüber hinaus vermerkte Ramón Christen, dass es potenziell mit der Startkondition beim Hyperparametertuning zu tun hat.
+
+#### TFT-Attention auslesen und darstellen:
+- **Zwischenresultat:** Robin zeigte das Dictionary, das durch Auslesen der Attention des TFT erhalten wird. Auch konnte er bereits erste visuelle Darstellungen aufzeigen. Die Resultate waren noch schwer zu interpretieren, was mit schlecht trainierten Modells in Zusammenhang gebracht wurde.
+- **Interpreation der Attention Wheights:** Robin legte seine Interpretation der ausgelesenen Attentiongewichte dar. Da noch einige Unsicherheiten bestanden, wurde entschieden, dass noch weiter geforscht werden sollte, wie der TFT im Detail funktioniert, um ein genaueres Verständnis der Attention-Ausgabe zu erhalten und diese interpretieren zu können.
+
+#### Training des TFT mit Daten aller Standorte:
+- **Modell trainiert mit allen Standorten:** Robin teilte mit, dass der TFT die Möglichkeit gibt, anhand von Identifiers die Daten aufzuteilen und schlug vor, diesen zu verwenden, um die Daten aller Standorte in einem Modell zu trainieren. Vorteil wäre, dass das Modell mehr Trainingsdaten hätte und möglicherweise Gelerntes von einem Standort auf den anderen übertragen könnte. Auch wäre das Modell dann nutzbar für mehrere Standorte.
+- **Fehlende Isolation:** Ramón Christen befürwortete diese Variante nicht, da damit das Experiment nicht mehr genügend isoliert ist, was es schwieriger macht, Aussagen über die gewonnenen Erkenntnisse des Modells zu treffen.
+
+#### Datenaufbereitung:
+- **fehlende Messungen aufüllen:** Es wurde besprochen, dass es potenziell fehlende Messungen in den Daten gibt, womit der TFT wahrscheinlich nicht gut umgehen kann. Deswegen wurde entschieden, im Folgenden diese Fehlenden mit NA-Werten (not applicable) aufzufüllen.
+
+#### Stand der Forschung:
+- **Feedback:** Robin erklärte, dass es eine erste Version der Stand der Forschung geschrieben habe und froh um ein kurzes Feedback sei. Ramón Christen erklärte sich zu einem solchen Feedback bereit.
+- **Performance-Vergleich:** Weiteres wurde empfohlen, nach einem Performance-Vergleichspaper zu suchen, um in der Dokumentation die Frage der Modellwahl auch von diesem Aspekt zu klären.
+
+<br><br>
+
+> **Hinweis:** Die To-Dos sind als Issues in diesem Repository erfasst.
+
+
+<br><br>
+</details>
