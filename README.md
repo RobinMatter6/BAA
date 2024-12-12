@@ -234,3 +234,51 @@ Besprechung der Zwischenpräsentation wie auch der erzielten Resultate, bezügli
 
 <br><br>
 </details>
+
+<details>
+<br>
+  <summary><strong>Protokoll des 10. Dezember 2024</strong></summary>
+  
+  **Teilnehmer:** Robin Matter, Ramón Christen  
+  **Datum:** 10. Dezember 2024  
+  **Themen:** Datenaufbereitung, TFT-Evaluation, TFT-Attention Plots, Dokumentaion
+  
+---
+
+### 1. Ziel des Meetings
+Besprechung der ersten Modellauswertung und der Attention-Plots sowie Festlegung des weiteren Vorgehens. Ausserdem wurde die Inbetriebnahme des FARM-Algorithmus diskutiert.
+
+### 2. Besprochene Themen und Beschlüsse
+
+#### Datenaufbereitung:
+- **Auflösung:** Robin zeigte eine neue Funktion, mit der die zeitliche Auflösung der Daten angepasst werden kann. Für die weitere Analyse wurde beschlossen, mit einer Auflösung von 30 Minuten und 60 Minuten zu arbeiten.
+
+#### TFT-Hyperparameter Tuning:
+- **Trainierte Modelle:** Robin erklärte, dass er durch Hyperparameter-Tuning acht verschiedene Modelle optimiert hat. Diese Modelle basieren auf der Kombination der folgenden Parameter: mit und ohne exogene Variablen, zeitliche Auflösungen von 30 Minuten und 60 Minuten, sowie die Anzahl der Encoder für eine Woche oder einen Tag.
+
+#### TFT-Performance Evaluation:
+- **Schlechter mit exogenen Variablen:** Robin zeigte, dass die mittlere absolute Abweichung (MAE) der Modelle, die mit exogenen Variablen trainiert wurden, bei den durch Hyperparameter-Tuning optimierten Modellen signifikant schlechter war. Zusätzlich erklärte er, dass er plant, jede exogene Variable einzeln zu testen, um diejenigen zu identifizieren, die für die Modelle tatsächlich nützlich sind. Im Anschluss soll die Analyse auf diese relevanten Variablen beschränkt werden.
+- **Kopieren des letzten Zeitschrittes:** Ramón Christen schlug vor, in der Dokumentation entweder darauf einzugehen, dass die gute Performance der Modelle möglicherweise durch das Erlernen eines einfachen Kopierens der Lösung des letzten Zeitschritts zustande kommt, oder dies visuell zu überprüfen.
+
+#### TFT-Attention Plot:
+- **Unklare Attention-Plots:** Es wurde festgestellt, dass nur wenige der Attention-Plots die erwarteten Muster zeigen. Während einige Plots sinnvoll interpretiert werden können, ist dies bei anderen nicht der Fall.
+
+#### FARM:
+- **Technische Dokumentation:** Ramón Christen stellt die Dokumentation des FARM-Algorithmus bereit.
+- **Vergleichsmethoden:** Es wurde besprochen, dass der FARM-Algorithmus und TFT idealerweise anhand des R²-Werts und durch visuelle Vergleiche bewertet werden sollen.
+
+#### Dokumentation:
+- **Akronyme:** Für wiederkehrende Begriffe sollte die LaTeX-Akronymfunktion verwendet werden.
+- **Zitieren alter Quellen:** Alte Quellen sollten auf das Original verweisen und nicht irreführend mit dem Jahr einer Neuveröffentlichung gekennzeichnet sein.
+- **Struktur:** Ramón Christen klärt ab, ob eine spezifische Kapitelstruktur befolgt werden muss.
+- **Methodik Aufbau:** Die Beschreibung der Methodik sollte wie ein Leitfaden oder eine Schritt-für-Schritt-Anleitung für die praktische Umsetzung formuliert werden.
+
+
+<br><br>
+
+> **Hinweis:** Die To-Dos sind als Issues in diesem Repository erfasst.
+
+
+<br><br>
+</details>
+
