@@ -5,6 +5,7 @@ import numpy as np
 from datetime import timedelta
 import numpy as np
 from datetime import timedelta
+import pytz
 
 class DataPreprocessor:
     def __init__(self):
@@ -24,6 +25,13 @@ class DataPreprocessor:
                     continue
         return dataframe
 
+    def convert_utc_to_local_time(self, dataframe: pd.DataFrame, time_column: str = "time") -> pd.DataFrame:
+        dataframe[time_column] = dataframe[time_column].dt.tz_localize(pytz.utc)
+        local_tz = pytz.timezone("Europe/Zurich")
+        dataframe[time_column] = dataframe[time_column].dt.tz_convert(local_tz)
+        dataframe[time_column] = dataframe[time_column].dt.tz_localize(None)
+        return dataframe
+
     def ensure_unique_single_word_values(self, dataframe: pd.DataFrame, column_name: str) -> pd.DataFrame:
         dataframe[column_name] = dataframe[column_name].apply(lambda x: x.split(' ')[0] if isinstance(x, str) else x)
         return dataframe
@@ -41,6 +49,7 @@ class DataPreprocessor:
         input_dataframe = input_dataframe.rename(columns={"DATUM UTC": "time"})
         input_dataframe = input_dataframe.rename(columns={"counter": "visitors"})
         input_dataframe = self.convert_to_datetime(input_dataframe)
+        input_dataframe = self.convert_utc_to_local_time(input_dataframe)
         input_dataframe = self.ensure_unique_single_word_values(input_dataframe, "internal_sensor_id")
         dataframe_dict = self.create_category_dictionaries(input_dataframe, "internal_sensor_id")
         for key in dataframe_dict:
@@ -119,11 +128,11 @@ class DataPreprocessor:
         df.set_index('time', inplace=True)
         resolution = pd.Timedelta(minutes=resolution_minutes)
         half_resolution = resolution / 2
-        start_time = df.index[0].ceil(f'{resolution_minutes}T')
-        end_time = df.index[-1].floor(f'{resolution_minutes}T')
+        start_time = df.index[0].ceil(f'{resolution_minutes}min')
+        end_time = df.index[-1].floor(f'{resolution_minutes}min')
         if end_time < start_time:
             return pd.DataFrame()
-        times = pd.date_range(start=start_time, end=end_time, freq=f'{resolution_minutes}T')
+        times = pd.date_range(start=start_time, end=end_time, freq=f'{resolution_minutes}min')
         results = []
         
         for t in times:
@@ -208,6 +217,7 @@ class DataPreprocessor:
             dataframe_list[i] = self.rename_meteo_columns(dataframe_list[i])
             dataframe_list[i] = self.remove_unnecessary_meteo_columns(dataframe) 
             dataframe_list[i] = self.convert_to_datetime(dataframe_list[i])
+            dataframe_list[i] = self.convert_utc_to_local_time(dataframe_list[i])
         return self.merge_multiple_dfs(dataframe_list, "time")
 
     def list_csv_files_in_directory(self, directory: str) -> List[str]:
@@ -356,11 +366,10 @@ if __name__ == "__main__":
         visitor_data, 
         meteo_csv_directory=meteo_csv_directory,
         resolution_in_minutes=30,
-        prepare_for_ml=True
+        prepare_for_ml=False
     )
     
     print(merged_visitor_meteo_dataframes)
-    preprocessing.resample_to_resolution(merged_visitor_meteo_dataframes["Rathausquai"],20).to_csv("Rathausquai_resolution.csv", index=False)
     merged_visitor_meteo_dataframes["Rathausquai"].to_csv("Rathausquai.csv", index=False)
     merged_visitor_meteo_dataframes["Kapellbrücke"].to_csv("Kapellbrücke.csv", index=False)
     merged_visitor_meteo_dataframes["Hertensteinstrasse"].to_csv("Hertensteinstrasse.csv", index=False)
