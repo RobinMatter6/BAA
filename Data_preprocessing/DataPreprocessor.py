@@ -2,6 +2,9 @@ import pandas as pd
 from typing import List, Dict
 import os
 import numpy as np
+from datetime import timedelta
+import numpy as np
+from datetime import timedelta
 
 class DataPreprocessor:
     def __init__(self):
@@ -39,7 +42,107 @@ class DataPreprocessor:
         input_dataframe = input_dataframe.rename(columns={"counter": "visitors"})
         input_dataframe = self.convert_to_datetime(input_dataframe)
         input_dataframe = self.ensure_unique_single_word_values(input_dataframe, "internal_sensor_id")
-        return self.create_category_dictionaries(input_dataframe, "internal_sensor_id")
+        dataframe_dict = self.create_category_dictionaries(input_dataframe, "internal_sensor_id")
+        for key in dataframe_dict:
+            print(key)
+            dataframe_dict[key] = self.adjust_dataframe_time_series_nearest(
+                dataframe_dict[key], time_column='time',
+                expected_interval_minutes=12
+            )
+            print(dataframe_dict[key])
+        return dataframe_dict
+
+
+    def adjust_dataframe_time_series_nearest(self, df: pd.DataFrame, time_column: str, expected_interval_minutes: int) -> pd.DataFrame:
+        import numpy as np
+        from datetime import timedelta
+        df[time_column] = pd.to_datetime(df[time_column])
+        df = df.sort_values(time_column).reset_index(drop=True)
+        first_timestamp = df[time_column].iloc[0]
+        last_timestamp = df[time_column].iloc[-1]
+        start_time = first_timestamp - timedelta(minutes=(expected_interval_minutes / 2))
+        parallel_series = pd.date_range(
+            start=start_time,
+            end=last_timestamp + timedelta(minutes=expected_interval_minutes),
+            freq=f'{expected_interval_minutes}min'
+        )
+        times = df[time_column].values
+        indices = np.searchsorted(parallel_series, times, side='left')
+        indices_minus_one = np.maximum(indices - 1, 0)
+        indices_plus_one = np.minimum(indices, len(parallel_series) - 1)
+        times_lower = parallel_series[indices_minus_one]
+        times_upper = parallel_series[indices_plus_one]
+        diff_lower = np.abs(times - times_lower)
+        diff_upper = np.abs(times - times_upper)
+        choose_lower = diff_lower <= diff_upper
+        final_indices = np.where(choose_lower, indices_minus_one, indices_plus_one)
+        df['parallel_time'] = parallel_series[final_indices].values
+        df_aggregated = df.groupby('parallel_time').agg({
+            'visitors': 'last',
+        }).reset_index().rename(columns={'parallel_time': 'time'})
+        df_parallel = pd.DataFrame({'time': parallel_series})
+        df_final = pd.merge(df_parallel, df_aggregated, on='time', how='left')
+        numeric_cols = df_final.select_dtypes(include=[np.number]).columns
+        df_final[numeric_cols] = df_final[numeric_cols].interpolate(method='linear')
+        return df_final
+
+
+
+
+    def adjust_dataframe_time_series(self, df: pd.DataFrame, time_column: str, expected_interval_minutes: int) -> pd.DataFrame:
+        df[time_column] = pd.to_datetime(df[time_column])
+        df = df.sort_values(time_column).reset_index(drop=True)
+        first_timestamp = df[time_column].iloc[0]
+        last_timestamp = df[time_column].iloc[-1]
+        start_time = first_timestamp - timedelta(minutes=(expected_interval_minutes/2))
+        parallel_series = pd.date_range(
+            start=start_time,
+            end=last_timestamp + timedelta(minutes=expected_interval_minutes),
+            freq=f'{expected_interval_minutes}min'
+        )
+        indices = np.searchsorted(parallel_series, df[time_column], side='left') - 1
+        indices[indices < 0] = 0
+        df['parallel_time'] = parallel_series[indices].values
+        df_aggregated = df.groupby('parallel_time').agg({
+            'visitors': 'last',
+        }).reset_index().rename(columns={'parallel_time': 'time'})
+        df_parallel = pd.DataFrame({'time': parallel_series})
+        df_final = pd.merge(df_parallel, df_aggregated, on='time', how='left')
+        numeric_cols = df_final.select_dtypes(include=[np.number]).columns
+        df_final[numeric_cols] = df_final[numeric_cols].interpolate(method='linear')
+        return df_final
+
+
+    def resample_to_resolution(self, df, resolution_minutes):
+        df = df.copy()
+        df['time'] = pd.to_datetime(df['time'])
+        df.set_index('time', inplace=True)
+        resolution = pd.Timedelta(minutes=resolution_minutes)
+        half_resolution = resolution / 2
+        start_time = df.index[0].ceil(f'{resolution_minutes}T')
+        end_time = df.index[-1].floor(f'{resolution_minutes}T')
+        if end_time < start_time:
+            return pd.DataFrame()
+        times = pd.date_range(start=start_time, end=end_time, freq=f'{resolution_minutes}T')
+        results = []
+        
+        for t in times:
+            window_start = t - half_resolution
+            window_end = t + half_resolution
+            mask = (df.index > window_start) & (df.index <= window_end)
+            data_in_window = df.loc[mask]
+            if not data_in_window.empty:
+                averaged = data_in_window.mean()
+                averaged['time'] = t
+                results.append(averaged)
+        result_df = pd.DataFrame(results)
+        result_df.sort_values('time', inplace=True)
+        result_df = result_df.reset_index(drop=True)
+        cols = result_df.columns.tolist()
+        cols.remove('time')
+        cols.insert(0, 'time')
+        result_df = result_df[cols]
+        return result_df
 
     def load_multiple_dfs(self, csv_file_paths: List[str], csv_delimiter: str) -> List[pd.DataFrame]:
         dataframe_list = []
@@ -55,14 +158,14 @@ class DataPreprocessor:
     
     def rename_meteo_columns(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         unit_code_map = {
-            "Absolute Humidity (g/m³)": "uto200s0", 
-            "Air Pressure (hPa)": "prestas0", 
-            "Air Temperature (°C)": "tre200s0",
-            "Precipitation (mm)": "rre150z0",
-            "Precipitation Duration (min)": "rco150z0",
-            "Snow Depth (cm)": "htoauts0",
-            "Sunshine Duration (min)": "sre000z0",
-            "Wind Speed (km/h)": "fu3010z0"
+            "Absolute Humidity": "uto200s0", 
+            "Air Pressure": "prestas0", 
+            "Air Temperature": "tre200s0",
+            "Precipitation": "rre150z0",
+            "Precipitation Duration": "rco150z0",
+            "Snow Depth": "htoauts0",
+            "Sunshine Duration": "sre000z0",
+            "Wind Speed": "fu3010z0"
         }
         reverse_map = {v: k for k, v in unit_code_map.items()}
         dataframe.rename(columns=reverse_map, inplace=True)
@@ -141,7 +244,7 @@ class DataPreprocessor:
             dataframe = dataframe[(z_scores >= -3) & (z_scores <= 3)]
         return dataframe
 
-    #IQR is to aggressive
+    #IQR removes to much
     def remove_outliers(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         numeric_columns = dataframe.select_dtypes(include=['float64', 'int64']).columns
         for col in numeric_columns:
@@ -174,14 +277,16 @@ class DataPreprocessor:
                 outlier_flags.loc[group.index] = outliers
         if mark_outliers:
             dataframe['outlier'] = outlier_flags
-            return dataframe
         else:
-            return dataframe[~outlier_flags]
+            dataframe = dataframe[~outlier_flags]
+        dataframe = dataframe.drop(columns=['weekday', 'time_30min'])
+        return dataframe
+    
 
 
 
     def log_transform_skewed_columns(self, dataframe: pd.DataFrame, skew_threshold: float = 0.5, log_base: int = 10) -> pd.DataFrame:
-        high_log_columns = ["Precipitation Duration (min)", "Precipitation (mm)", "Snow Depth (cm)"]
+        high_log_columns = ["Precipitation Duration", "Precipitation", "Snow Depth"]
         for col in dataframe.select_dtypes(include=['float64', 'int64']).columns:
             skewness = dataframe[col].skew()
             if skewness > skew_threshold:
@@ -199,16 +304,35 @@ class DataPreprocessor:
         return dataframe
 
 
+    def add_time_and_dummy_columns(self, dataframe: pd.DataFrame, time_column: str = "time") -> pd.DataFrame:
+        dataframe["minute_of_hour"] = dataframe[time_column].dt.minute
+        dataframe["hour_of_day"] = dataframe[time_column].dt.hour
+        dataframe["day_of_week"] = dataframe[time_column].dt.dayofweek
+        dataframe["day_of_month"] = dataframe[time_column].dt.day
+        dataframe["week_of_year"] = dataframe[time_column].dt.isocalendar().week
+        dataframe["month_of_year"] = dataframe[time_column].dt.month
+        dataframe["dummy_id"] = 1
+        dataframe["region"] = "Rathausquai"
+        dataframe["date"] = dataframe["time"]
+        return dataframe
+
+    
+
     def prepare_data_for_ml(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        dataframe.drop(["Snow Depth", "Precipitation"], axis=1, inplace=True)
+        dataframe.dropna(inplace=True)
         dataframe = self.log_transform_skewed_columns(dataframe)
         #dataframe = self.remove_outliers_z_scores(dataframe)
         dataframe = self.remove_outliers_with_rolling_window(dataframe, time_column="time", value_column="visitors")
-        dataframe = self.standardize_dataframe(dataframe)
+        #dataframe = self.standardize_dataframe(dataframe)
+        dataframe = self.add_time_and_dummy_columns(dataframe)
         return dataframe
+
 
     def get_merged_visitor_meteo_data(self, visitor_dataframe: pd.DataFrame, 
                                    meteo_csv_file_paths: List[str] = None, 
                                    meteo_csv_directory: str = None,
+                                   resolution_in_minutes: str = None,
                                    prepare_for_ml: bool = False) -> Dict[str, pd.DataFrame]:
         if (meteo_csv_file_paths is None) == (meteo_csv_directory is None):
             raise ValueError("Provide either meteo_csv_file_paths or meteo_csv_directory, but not both.")
@@ -219,6 +343,8 @@ class DataPreprocessor:
             key: self.convert_all_to_numeric(self.merge_visitor_with_meteo(visitor_df, meteo_dataframe))
             for key, visitor_df in visitor_dataframes.items()
         }
+        for key, _ in merged_data.items():
+            merged_data[key] = self.resample_to_resolution(merged_data[key],resolution_in_minutes)
         return {key: self.prepare_data_for_ml(df) for key, df in merged_data.items()} if prepare_for_ml else merged_data
 
 
@@ -226,30 +352,59 @@ if __name__ == "__main__":
     preprocessing = DataPreprocessor()
     visitor_data = pd.read_csv("BesucherMessungExport.csv")
     meteo_csv_directory = "./exogen_data"
-    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(visitor_data, meteo_csv_directory=meteo_csv_directory, prepare_for_ml=True)
+    merged_visitor_meteo_dataframes = preprocessing.get_merged_visitor_meteo_data(
+        visitor_data, 
+        meteo_csv_directory=meteo_csv_directory,
+        resolution_in_minutes=30,
+        prepare_for_ml=True
+    )
+    
     print(merged_visitor_meteo_dataframes)
-    merged_visitor_meteo_dataframes["Rathausquai"].to_csv("dump.csv", index=False)
+    preprocessing.resample_to_resolution(merged_visitor_meteo_dataframes["Rathausquai"],20).to_csv("Rathausquai_resolution.csv", index=False)
+    merged_visitor_meteo_dataframes["Rathausquai"].to_csv("Rathausquai.csv", index=False)
+    merged_visitor_meteo_dataframes["Kapellbrücke"].to_csv("Kapellbrücke.csv", index=False)
+    merged_visitor_meteo_dataframes["Hertensteinstrasse"].to_csv("Hertensteinstrasse.csv", index=False)
+    merged_visitor_meteo_dataframes["Löwendenkmal"].to_csv("Löwendenkmal.csv", index=False)
+    merged_visitor_meteo_dataframes["Schwanenplatz"].to_csv("Schwanenplatz.csv", index=False)
+
     for key, df in merged_visitor_meteo_dataframes.items():
-        print(f"Testing DataFrame for {key}...")
+        print(f"\n--- Testing DataFrame for {key} ---")
+        print("Datentypen der Spalten:")
         print(df.dtypes)
-        # Check for skewness
-        skewness = df.select_dtypes(include=['float64', 'int64']).skew()
-        print(f"Skewness for {key}:\n{skewness}\n")
+        print()
         
-        # Check for outliers
+        print("Überprüfung auf NaN-Werte:")
+        nan_counts = df.isna().sum()
+        nan_columns = nan_counts[nan_counts > 0]
+        if not nan_columns.empty:
+            print("Spalten mit NaN-Werten:")
+            print(nan_columns)
+        else:
+            print("Keine NaN-Werte in den Spalten gefunden.")
+        print()
+        
+        print("Skewness der numerischen Spalten:")
+        skewness = df.select_dtypes(include=['float64', 'int64']).skew()
+        print(skewness)
+        print()
+        
+        print("Anzahl der Ausreisser pro numerischer Spalte:")
         numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
         outlier_counts = {}
-        
         for col in numeric_columns:
             mean = df[col].mean()
             std = df[col].std()
+            if std == 0:
+                outlier_counts[col] = 0
+                continue
             z_scores = (df[col] - mean) / std
             outlier_counts[col] = ((z_scores < -3) | (z_scores > 3)).sum()
+        print(outlier_counts)
+        print()
         
-        print(f"Outlier counts for {key}:\n{outlier_counts}\n")
-        
-        # Check for standardization
+        print("Überprüfung der Standardisierung der numerischen Spalten:")
         means = df[numeric_columns].mean()
         stds = df[numeric_columns].std()
         is_standardized = all(np.isclose(means, 0, atol=1e-1)) and all(np.isclose(stds, 1, atol=1e-1))
-        print(f"Is {key} standardized? {is_standardized}\n")
+        print(f"Ist das DataFrame '{key}' standardisiert? {'Ja' if is_standardized else 'Nein'}")
+        print()
