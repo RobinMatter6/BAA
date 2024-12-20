@@ -282,3 +282,38 @@ Besprechung der ersten Modellauswertung und der Attention-Plots sowie Festlegung
 <br><br>
 </details>
 
+
+<details>
+<br>
+  <summary><strong>Protokoll des 20. Dezember 2024</strong></summary>
+  
+  **Teilnehmer:** Robin Matter, Ramón Christen  
+  **Datum:** 20. Dezember 2024  
+  **Themen:** Plots und Dokumentation
+  
+---
+
+### 1. Ziel des Meetings
+In der Besprechung wurden die erhaltenen Ergebnisse vorgestellt und die zu beachtenden Aspekte der Dokumentation diskutiert.
+
+### 2. Besprochene Themen und Beschlüsse
+
+#### Plots:
+- **Farm Relevanz abweichung:** Es wurden die starken Abweichungen einzelner Zeiten in der vom FARM gemessenen Relevanz des Regens festgehalten und die Möglichkeit eines Nachschlagens des Wetters dieses Tages vorgeschlagen.
+
+- **Möglichkeit von Vektorgraphik:** Die Plots, welche die Vorhersagen des TFT-Modells den wirklichen Werten gegenüberstellen, zeigen, dass die Werte vor allem bei kurzfristigen Vorhersagen nahe beieinander liegen. Es wurde angemerkt, dass möglicherweise eine Vektorgrafik ein genaueres Bild geben könnte, ob das Modell nur kopiert. Die aktuellen PNG-Bilder zeigen dies jedoch noch nicht.
+
+- **Attention-Gewichts Einschätzung:** Da Google Research keine Dokumentation zur Attention-Auslese zu Verfügung gestellt hat, wurde festgehalten das die Ausprägung der Attention-Gewiche mit denen des Papers und den anderen gemessenen Attention-Gewichten bei Vergleichen in Relation gesetzt werden kann.
+
+#### Dokumentation:
+- **Handhabung von Mutmassungen:** In der Dokumentation sollte darauf geachtet werden, nicht zu mutmassen und wenn doch, sollte dies klar als solches beschrieben werden.
+
+- **Leeraum zwischen Graphikrand und Graphik:** Bei Grafiken in der Dokumentation sollte darauf geschaut werden, dass bei konstanten Linien bis zum Rand der Grafik etwas Leerraum bleibt.
+
+- **Nutzen von Plots:** In die Dokumentation sollten die Highlight-Plots, auf welche sich in der Beschreibung bezogen wird, aufgenommen werden. Weitere relevante Plots sollten in den Anhang und ansonsten nicht im Abschlussbericht enthalten sein.
+
+
+<br><br>
+
+<br><br>
+</details>
