@@ -192,4 +192,4 @@ if __name__ == "__main__":
     analyser = DataAnalyser()
     location_weekdays_dfs = analyser.process_data(visitor_path="../Data_preprocessing/BesucherMessungExport.csv", exogen_data_directory_path="../Data_preprocessing/exogen_data")
 
-    analyser.process_and_plot_all_exog_variables(location_weekdays_dfs=location_weekdays_dfs, directory='./delta_plots_exogen_data')
+    analyser.process_and_plot_all_exog_variables(location_weekdays_dfs=location_weekdays_dfs, directory='./correlation_plots')
