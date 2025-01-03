@@ -16,7 +16,10 @@ class DataAnalyser:
         preprocessing = DataPreprocessor()
         visitor_data = pd.read_csv(visitor_path)
         meteo_csv_directory = exogen_data_directory_path
-        return preprocessing.get_merged_visitor_meteo_data(visitor_dataframe=visitor_data, meteo_csv_directory=meteo_csv_directory)
+        return preprocessing.get_merged_visitor_meteo_data(visitor_dataframe=visitor_data,
+                                                           meteo_csv_directory=meteo_csv_directory,
+                                                           resolution_in_minutes=60,
+                                                           prepare_for_ml=False)
     
     def strip_column_spaces(self, df: pd.DataFrame) -> pd.DataFrame:
         df.columns = df.columns.str.strip()
@@ -26,11 +29,6 @@ class DataAnalyser:
         for col in df.select_dtypes(include='object').columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
         return df
-
-    def split_by_weekday(self, df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
-        weekday_map = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
-        return {day: df[df['time'].dt.weekday == day_num].reset_index(drop=True)
-                for day_num, day in weekday_map.items()}
         
     def split_by_weekday(self, df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         weekday_map = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
@@ -81,12 +79,13 @@ class DataAnalyser:
             df_filtered['hour'] = df_filtered['time'].dt.hour
             hourly_avg_filtered = df_filtered.groupby('hour').mean(numeric_only=True).reset_index()
             delta = pd.merge(overall_avg[['hour', 'visitors']], hourly_avg_filtered[['hour', 'visitors']],
-                             on='hour', how='left', suffixes=('_overall', '_filtered'))
+                            on='hour', how='left', suffixes=('_overall', '_filtered'))
             delta['visitors_filtered'] = delta['visitors_filtered'].fillna(overall_avg['visitors'])
-            delta['visitors_delta'] = delta['visitors_filtered'] - delta['visitors_overall']
+            delta['visitors_percentage_delta'] = ((delta['visitors_filtered'] - delta['visitors_overall']) / delta['visitors_overall']) * 100
             delta['category'] = value_range[2]
             delta_frames.append(delta)
         return pd.concat(delta_frames)
+
 
     def process_and_plot_all_exog_variables(self, location_weekdays_dfs: Dict[str, Dict[str, pd.DataFrame]], directory: str = './plots') -> None:
         weekday_number_map = {'MO': '01', 'TU': '02', 'WE': '03', 'TH': '04', 'FR': '05', 'SA': '06', 'SU': '07', 'WW': '09' , 'WE': '10'}
@@ -96,14 +95,21 @@ class DataAnalyser:
                 exogenous_columns = [col for col in df.columns if col not in ['visitors', 'time']]
                 overall_avg = self.average_hourly_data(df=df)
                 for exog_variable in exogenous_columns:
-                    if not df[exog_variable].isna().all():
-                        print(f"Plotting {exog_variable} for {location} on {day}")
-                        self.plot_exog_vs_visitors_percentage_change(df=df, exog_variable=exog_variable, location=location, day=day, day_number=day_number, directory=directory)
-                    categories = self.get_exog_categories(exog_variable=exog_variable)
-                    if categories:
-                        delta_df = self.calculate_deltas(overall_avg=overall_avg, df=df, exog_variable=exog_variable, categories=categories)
-                        self.plot_exog_vs_visitors_percentage_change_on_hour(df=delta_df, x_column='hour', y_column='visitors_delta', category_column='category', exog_variable=exog_variable, location=location, day=day, day_number=day_number, directory=directory)
+                    delta_df = self.calculate_deltas(overall_avg=overall_avg, df=df, exog_variable=exog_variable, categories=categories)
+                    self.plot_exog_vs_visitors_percentage_change(df=df, exog_variable=exog_variable, location=location, day=day, day_number=day_number, directory=directory)
                     self.plot_correlation_of_exog_variable(df=df, exog_variable=exog_variable, location=location, day=day, day_number=day_number, directory=directory)
+                    categories = self.get_exog_categories(exog_variable=exog_variable)
+                    self.plot_exog_vs_visitors_percentage_change_on_hour(
+                        df=delta_df,
+                        x_column='hour',
+                        y_column='visitors_percentage_delta',
+                        category_column='category',
+                        exog_variable=exog_variable,
+                        location=location,
+                        day=day,
+                        day_number=day_number,
+                        directory=directory
+                    )
 
     def clean_variable_name(self, var_name: str) -> str:
         return re.sub(r'[^\w\s-]', '_', var_name)
@@ -156,15 +162,16 @@ class DataAnalyser:
         for category in df[category_column].unique():
             category_df = df[df[category_column] == category]
             plt.plot(category_df[x_column], category_df[y_column], marker='o', label=category)
-        plt.title(f'{y_column} vs {x_column} ({exog_variable}) for {location} on {day}')
+        plt.title(f'Percentage Deviation of Visitors vs {x_column} ({exog_variable}) for {location} on {day}')
         plt.xlabel(x_column)
-        plt.ylabel(y_column)
+        plt.ylabel('Visitor Percentage Deviation (%)')
         plt.legend()
         plt.grid(True)
         filename = os.path.join(exog_directory, f'percentage_deviation_visitors_vs_{clean_exog_variable}_on_hour_{location}_{day_number}.png')
         plt.savefig(filename)
         plt.close()
         print(f"Plot saved as {filename}")
+
 
     def plot_exog_vs_visitors_percentage_change(self, df: pd.DataFrame, exog_variable: str, location: str, day: str, day_number: str, directory: str = './plots') -> None:
         clean_exog_variable = self.clean_variable_name(var_name=exog_variable)
