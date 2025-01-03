@@ -1,0 +1,2 @@
+model_checkpoint_path: "/opt/BAA/TFT/models/hyper_parameter_tuning/day_60min/pod_just_air_temperature_day_60min/saved_models/visitors/main/TemporalFusionTransformer.ckpt"
+all_model_checkpoint_paths: "/opt/BAA/TFT/models/hyper_parameter_tuning/day_60min/pod_just_air_temperature_day_60min/saved_models/visitors/main/TemporalFusionTransformer.ckpt"

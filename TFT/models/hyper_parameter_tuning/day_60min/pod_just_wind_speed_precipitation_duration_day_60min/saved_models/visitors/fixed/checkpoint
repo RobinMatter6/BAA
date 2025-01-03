@@ -1,0 +1,2 @@
+model_checkpoint_path: "/opt/BAA/TFT/models/training_fixed_parameters/day_60min/pod_just_wind_speed_precipitation_duration_day_60min/saved_models/visitors/fixed/TemporalFusionTransformer.ckpt"
+all_model_checkpoint_paths: "/opt/BAA/TFT/models/training_fixed_parameters/day_60min/pod_just_wind_speed_precipitation_duration_day_60min/saved_models/visitors/fixed/TemporalFusionTransformer.ckpt"
